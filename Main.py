@@ -40,7 +40,7 @@ def split_data(data, ratio):
 def show_image(x):
     plt.imshow(np.clip(x, 0, 1))
 
-shape = (150,150)
+shape = (100,100)
 
 art_data = load_images('Art_Data', shape)
 target_data = load_images('Target_Data', shape)
@@ -49,9 +49,10 @@ target_data = load_images('Target_Data', shape)
 cv2.imshow('Art',art_data[0])
 cv2.waitKey(0)
 
-art_autoen = Autoencoder(art_data, art_data, 2500)
-art_autoen.train(epochs = 350)
+art_autoen = Autoencoder(art_data, art_data, 1000)
+art_autoen.train(epochs = 200)
 art_autoen.visualize(art_data[0])
+art_autoen.save_model('Autoen')
 
 	
 

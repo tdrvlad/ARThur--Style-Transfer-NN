@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 def show_image(x):
-    plt.imshow(x * 255)
+    plt.imshow(np.clip(x, 0, 1))
 
 class Autoencoder:
 	def __init__(self, train_images, test_images, encoding_size):
@@ -61,13 +61,13 @@ class Autoencoder:
 		encoded_obj = self.encoder.predict(image[None])[0]
 		reconstructed_obj = self.decoder.predict(encoded_obj[None])[0]
 
-		'''
+		
 		cv2.imshow('Original',image)
 		cv2.waitKey(0)
 
 		cv2.imshow('Reconstructed',reconstructed_obj)
 		cv2.waitKey(0)
-		'''
+		
 
 		plt.subplot(1,2,1)
 		plt.title("Original")
@@ -83,3 +83,6 @@ class Autoencoder:
 		show_image(reconstructed_obj)
 
 		plt.show()
+
+	def save_model(name):
+		model.save(name)
