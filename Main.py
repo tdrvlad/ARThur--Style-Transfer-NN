@@ -20,7 +20,9 @@ def load_images(directory, resize_shape = None):
 		print('Resizing images to ',height, 'x', width)
 
 	for file in files:
-		image = cv2.imread(file).astype('float32') / 255.0
+		#cv2 uses BGR colour scheme, matplotlib uses RGB
+		image = cv2.cvtColor(cv2.imread(file), cv2.COLOR_BGR2RGB)
+		image = image.astype('float32') / 255 - 0.5
 
 		if resize_shape == None:
 			images.append(image)
@@ -38,21 +40,30 @@ def split_data(data, ratio):
 	return data[:n], data[n:]
 
 def show_image(x):
-    plt.imshow(np.clip(x, 0, 1))
+    plt.imshow(np.clip(x + 0.5, 0, 1))
 
-shape = (100,100)
+
+shape = (20,20)
+epochs = 5
+
+
+encoding_size = int(np.log(shape[0] * shape[1])) + 1
 
 art_data = load_images('Art_Data', shape)
 target_data = load_images('Target_Data', shape)
 
+white_canvas = np.ones(target_data[0].shape)
 
-cv2.imshow('Art',art_data[0])
-cv2.waitKey(0)
+print('Encoding Size: ', encoding_size)
 
-art_autoen = Autoencoder(art_data, art_data, 1000)
-art_autoen.train(epochs = 200)
+art_autoen = Autoencoder()
+art_autoen.build_by_layers(image_shape = target_data[0].shape, encoding_size = encoding_size)
+art_autoen.train(train_images = art_data, test_images = art_data,epochs = epochs)
 art_autoen.visualize(art_data[0])
-art_autoen.save_model('Autoen')
+
+
+#art_autoen.save_model('Autoen')
+
 
 	
 
