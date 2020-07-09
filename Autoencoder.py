@@ -7,60 +7,50 @@ import cv2
 def show_image(x):
     plt.imshow(np.clip(x + 0.5, 0, 1))
 
-class Styler:
-	def __init__(target_autoencoder, art_autodecoder, target_image):
-
-		image_shape = target_image.shape
-
-		target_encoder = target_autoencoder.get_encoder()
-		art_decoder = art_autoencoder.get_decoder()
-
-		target_obj = Input(shape = image_shape)
-		synthetised_obj = self.target_encoder(target_obj)
-		styled_obj = self.art_decoder(synthetised_obj)
-
-		self.Styler = Model(target, styled_obj)
-		self.Styler.compile(optimizer = 'adamax', loss = 'mse')
-
-	
-
 class Autoencoder:
 	def __init__(self):
 		pass
 
 	def build_by_parts(self, encoder, decoder, image_shape):
 
-		target_encoder = target_autoencoder.get_encoder()
-		art_decoder = art_autoencoder.get_decoder()
+		self.encoder = encoder
+		self.decoder = decoder
 
 		input_obj = Input(shape = image_shape)
-		encoded_obj = self.target_encoder(input_obj)
-		reconstructed_obj = self.art_decoder(encoded_obj)
+		encoded_obj = self.encoder(input_obj)
+		reconstructed_obj = self.decoder(encoded_obj)
 
-		self.model = Model(target, styled_obj)
+		self.model = Model(input_obj, reconstructed_obj)
 		self.model.compile(optimizer = 'adamax', loss = 'mse')
 
 		print(self.model.summary())
 
 
 
-	def build_by_layers(self, image_shape, encoding_size):
+	def build_by_layers(self, image_shape, encoding_size, dropout):
 				
-		# The encoder
+		# Main layers
+		input_layer = InputLayer(image_shape)
+		mid_encoding_layer = Dense(encoding_size ** 2)
+		final_encoding_layer = Dense(encoding_size)
+
+		encoded_input_layer = InputLayer((encoding_size,))
+		mid_decoding_layer = Dense(encoding_size ** 2)
+		final_decoding_layer = Dense(np.prod(image_shape))
+
+		#The encoder
 		encoder = Sequential()
-		encoder.add(InputLayer(input_shape = image_shape))
-		encoder.add(Conv2D(encoding_size ** 2, encoding_size ** 2, activation='relu', padding="same", input_shape = image_shape))
-		encoder.add(Dropout(0.2))
+		encoder.add(input_layer)
 		encoder.add(Flatten())
-		encoder.add(Dense(encoding_size ** 2))
-		encoder.add(Dropout(0.2))
-		encoder.add(Dense(encoding_size))
+		encoder.add(mid_encoding_layer)
+		encoder.add(Dropout(dropout))
+		encoder.add(final_encoding_layer)
 
 		# The decoder
 		decoder = Sequential()
-		decoder.add(InputLayer((encoding_size,)))
-		decoder.add(Dense(encoding_size ** 2))
-		decoder.add(Dense(np.prod(image_shape))) # np.prod(img_shape) is the same as 32*32*3, it's more generic than saying 3072
+		decoder.add(encoded_input_layer)
+		decoder.add(mid_decoding_layer)
+		decoder.add(final_decoding_layer) 
 		decoder.add(Reshape(image_shape))
 
 		self.encoder = encoder
@@ -88,7 +78,7 @@ class Autoencoder:
 		plt.ylabel('loss')
 		plt.xlabel('epoch')
 		plt.legend(['train', 'test'], loc='upper right')
-		plt.show()
+		# plt.show()
 
 	def visualize(self, image):
 
@@ -114,9 +104,6 @@ class Autoencoder:
 
 		cv2.imwrite('Result.jpg', cv2.cvtColor((reconstructed_obj + 0.5) * 255.0, cv2.COLOR_RGB2BGR))
 	
-	def get_autoencoder(self):
-		return self.autoencoder
-
 	def get_encoder(self):
 		return self.encoder
 

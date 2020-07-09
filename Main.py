@@ -1,3 +1,4 @@
+#https://towardsdatascience.com/neural-style-transfer-tutorial-part-1-f5cd3315fa7f
 from Autoencoder import Autoencoder
 import os
 import glob
@@ -43,11 +44,11 @@ def show_image(x):
     plt.imshow(np.clip(x + 0.5, 0, 1))
 
 
-shape = (20,20)
-epochs = 5
+shape = (250,250)
+epochs = 70
 
-
-encoding_size = int(np.log(shape[0] * shape[1])) + 1
+k = 3
+encoding_size = int(k * np.log(shape[0] * shape[1]))
 
 art_data = load_images('Art_Data', shape)
 target_data = load_images('Target_Data', shape)
@@ -56,13 +57,27 @@ white_canvas = np.ones(target_data[0].shape)
 
 print('Encoding Size: ', encoding_size)
 
+print('Training Art Autoencoder')
 art_autoen = Autoencoder()
-art_autoen.build_by_layers(image_shape = target_data[0].shape, encoding_size = encoding_size)
-art_autoen.train(train_images = art_data, test_images = art_data,epochs = epochs)
+art_autoen.build_by_layers(image_shape = art_data[0].shape, encoding_size = encoding_size, dropout = 0.05)
+art_autoen.train(train_images = art_data, test_images = art_data, epochs = epochs)
+
+
+print('Training Target Autoencoder')
+target_autoen = Autoencoder()
+target_autoen.build_by_layers(image_shape = target_data[0].shape, encoding_size = encoding_size, dropout = 0.5)
+target_autoen.train(train_images = target_data, test_images = target_data, epochs = epochs)
+
 art_autoen.visualize(art_data[0])
+target_autoen.visualize(target_data[0])
 
+arthur = Autoencoder()
+arthur.build_by_parts(target_autoen.get_encoder(),art_autoen.get_decoder(),target_data[0].shape)
+arthur.train(train_images = target_data, test_images = target_data, epochs = 10)
 
-#art_autoen.save_model('Autoen')
+arthur.visualize(target_data[0])
+
+#target_autoen.save_model('Autoen')
 
 
 	
