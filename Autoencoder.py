@@ -11,23 +11,29 @@ class Autoencoder:
 	def __init__(self):
 		pass
 
-	def build_by_parts(self, encoder, decoder, image_shape):
+	def build_by_parts(self, conv, encoder, decoder, deconv, image_shape):
 
+		self.conv = conv
 		self.encoder = encoder
 		self.decoder = decoder
+		self.deconv = deconv
 
-		input_obj = Input(shape = image_shape)
-		encoded_obj = self.encoder(input_obj)
-		reconstructed_obj = self.decoder(encoded_obj)
+		# Adding all up
 
-		self.model = Model(input_obj, reconstructed_obj)
+		input_obj = Input(shape = image_shape, name = 'Input')
+		conv_obj = self.conv(input_obj)
+		encoded_obj = self.encoder(conv_obj)
+		decoded_obj = self.decoder(encoded_obj)
+		reconstr_obj = self.deconv(decoded_obj)
+
+		self.model = Model(input_obj, reconstr_obj)
 		self.model.compile(optimizer = 'adamax', loss = 'mse')
 
 		print(self.model.summary())
 
 
 
-	def build_by_layers(self, image_shape, encoding_size, dropout):
+	def build_by_layers(self, image_shape, encoding_size):
 			
 		
 		stride = 2
@@ -139,11 +145,7 @@ class Autoencoder:
 
 		cv2.imwrite('Result.jpg', cv2.cvtColor((reconstr_obj[0] + 0.5) * 255.0, cv2.COLOR_RGB2BGR))
 	
-	def get_encoder(self):
-		return self.encoder
+	def get_blocks(self):
+		return self.conv, self.encoder, self.decoder, self.deconv
 
-	def get_decoder(self):
-		return self.decoder
-
-	def save_model(self, name):
-		self.autoencoder.save(name)
+	

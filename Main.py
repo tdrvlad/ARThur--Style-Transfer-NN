@@ -44,11 +44,12 @@ def show_image(x):
     plt.imshow(np.clip(x + 0.5, 0, 1))
 
 
-shape = (250,250)
-epochs = 70
+shape = (200,200)
+epochs = 50
 
-k = 3
+k = 2
 encoding_size = int(k * np.log(shape[0] * shape[1]))
+print("Encoding size: ",encoding_size)
 
 art_data = load_images('Art_Data', shape)
 target_data = load_images('Target_Data', shape)
@@ -59,21 +60,24 @@ print('Encoding Size: ', encoding_size)
 
 print('Training Art Autoencoder')
 art_autoen = Autoencoder()
-art_autoen.build_by_layers(image_shape = art_data[0].shape, encoding_size = encoding_size, dropout = 0.05)
+art_autoen.build_by_layers(image_shape = art_data[0].shape, encoding_size = encoding_size)
 art_autoen.train(train_images = art_data, test_images = art_data, epochs = epochs)
 
+art_autoen.visualize(art_data[0])
 
 print('Training Target Autoencoder')
 target_autoen = Autoencoder()
-target_autoen.build_by_layers(image_shape = target_data[0].shape, encoding_size = encoding_size, dropout = 0.5)
+target_autoen.build_by_layers(image_shape = target_data[0].shape, encoding_size = encoding_size)
 target_autoen.train(train_images = target_data, test_images = target_data, epochs = epochs)
 
-art_autoen.visualize(art_data[0])
 target_autoen.visualize(target_data[0])
 
+art_conv, art_encoder, art_decoder, art_deconv = art_autoen.get_blocks()
+target_conv, target_encoder, target_decoder, target_deconv = target_autoen.get_blocks()
+
 arthur = Autoencoder()
-arthur.build_by_parts(target_autoen.get_encoder(),art_autoen.get_decoder(),target_data[0].shape)
-arthur.train(train_images = target_data, test_images = target_data, epochs = 10)
+arthur.build_by_parts(target_conv,target_encoder,art_decoder,art_deconv,target_data[0].shape)
+arthur.train(train_images = target_data, test_images = target_data, epochs = int(epochs/2))
 
 arthur.visualize(target_data[0])
 
